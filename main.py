@@ -1,30 +1,62 @@
 import os 
 from dotenv import load_dotenv
 from google import genai
+import argparse
+from google.genai import types
 
-load_dotenv()
-api_key = os.environ.get("GEMINI_API_KEY")
+# setups
+def setup():
+    load_dotenv()
+    global api_key 
+    api_key = os.environ.get("GEMINI_API_KEY")
 
-if api_key == None:
-    raise RuntimeError("bad api key")
+    if api_key == None:
+        raise RuntimeError("bad api key")
+    
+def parsing_input():
+    parser = argparse.ArgumentParser(description="Chatbot")
+    parser.add_argument("user_prompt", type=str, help="User prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    args = parser.parse_args()
 
-client = genai.Client(api_key=api_key)
+    return args
+# Now we can access `args.user_prompt`
 
-response = client.models.generate_content(
-    model='gemini-2.5-flash', contents="Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
-)
+# user_input = arg.user_prompt
 
-#checking response meta data
+def llm_process(args):
+    client = genai.Client(api_key=api_key)
 
-if response.usage_metadata != None:
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-else:
-    raise RuntimeError("no usage_metadata")
+    messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
 
-print(response.text)
+    # calling the LLM model
+    response = client.models.generate_content(
+        model='gemini-2.5-flash', contents=messages
+    )
+
+    #checking response meta data
+
+    if response.usage_metadata != None:
+        if args.verbose:
+            print(f"User prompt: {args.user_prompt}")
+            print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+            print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+    else:
+        raise RuntimeError("no usage_metadata")
+    
+    
+
+
+    print(response.text)
 
 def main():
+    setup()
+
+
+    args = parsing_input()
+
+    llm_process(args)
+
     print("Hello from ai-agent!")
 
 
