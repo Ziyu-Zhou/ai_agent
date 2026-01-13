@@ -11,6 +11,7 @@ def main():
         print("Calculator App")
         print('Usage: python main.py "<expression>"')
         print('Example: python main.py "3 + 5"')
+        
         return
 
     expression = " ".join(sys.argv[1:])
