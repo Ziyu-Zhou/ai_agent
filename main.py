@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from google import genai
 import argparse
 from google.genai import types
+from prompts import system_prompt
+from functions.call_function import available_functions
 
 # setups
 def setup():
@@ -31,7 +33,13 @@ def llm_process(args):
 
     # calling the LLM model
     response = client.models.generate_content(
-        model='gemini-2.5-flash', contents=messages
+        model='gemini-2.5-flash', 
+        contents=messages,
+        config = types.GenerateContentConfig(
+            tools = [available_functions],
+            system_instruction=system_prompt,
+            temperature=0
+            ),
     )
 
     #checking response meta data
@@ -44,20 +52,25 @@ def llm_process(args):
     else:
         raise RuntimeError("no usage_metadata")
     
-    
+
+    # program output 
+    if response.function_calls != None:
+        for function_call in response.function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        print(response.text)
 
 
-    print(response.text)
 
 def main():
-    setup()
 
+    setup()
 
     args = parsing_input()
 
     llm_process(args)
 
-    print("Hello from ai-agent!")
+    # print("Hello from ai-agent!")
 
 
 if __name__ == "__main__":

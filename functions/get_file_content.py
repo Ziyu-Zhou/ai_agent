@@ -2,7 +2,6 @@ import os
 from config import MAX_CHARS
 
 
-MAX_CHARS = 10000
 
 def get_file_content(working_directory, file_path):
     
