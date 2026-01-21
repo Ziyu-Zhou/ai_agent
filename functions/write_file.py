@@ -1,4 +1,40 @@
 import os
+from google.genai import types
+
+
+# Gemini tool schema for: write_file(working_directory, file_path, content)
+# Assumes: from google.genai import types
+
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description=(
+        "Writes text content to a file located under the working directory. "
+        "Validates that the target path stays within the permitted working directory, "
+        "rejects directory paths, creates any missing parent directories, and overwrites "
+        "the file if it already exists. Returns a success or error message."
+    ),
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description=(
+                    'Path to the file to write, relative to the working directory '
+                    '(e.g., "output.txt", "logs/run/output.log").'
+                ),
+            ),
+            "content": types.Schema(
+                type=types.Type.STRING,
+                description=(
+                    "The full text content to write to the file. Existing file contents "
+                    "will be overwritten."
+                ),
+            ),
+        },
+        required=["file_path", "content"],
+    ),
+)
+
 
 
 def write_file(working_directory, file_path, content):

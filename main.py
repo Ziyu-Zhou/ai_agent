@@ -5,6 +5,7 @@ import argparse
 from google.genai import types
 from prompts import system_prompt
 from functions.call_function import available_functions
+from functions.call_function import call_function
 
 # setups
 def setup():
@@ -55,8 +56,25 @@ def llm_process(args):
 
     # program output 
     if response.function_calls != None:
+        function_result = []
         for function_call in response.function_calls:
-            print(f"Calling function: {function_call.name}({function_call.args})")
+            function_call_result = call_function(function_call, args.verbose)
+            if not function_call_result.parts:
+                raise Exception("No parts in function_call_result")
+            first_part = function_call_result.parts[0]
+
+            if not first_part.function_response:
+                raise Exception("No function_response in function_call_result")
+
+            if not first_part.function_response.response:
+                raise Exception("No function_response.response in function_call_result")
+
+            if args.verbose:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
+            
+        # for function_call in response.function_calls:
+        #     print(f"Calling function: {function_call.name}({function_call.args})")
     else:
         print(response.text)
 

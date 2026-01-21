@@ -1,6 +1,33 @@
 import os
 from config import MAX_CHARS
+from google.genai import types
 
+
+# Gemini tool schema for: get_file_content(working_directory, file_path)
+# Assumes: from google.genai import types
+
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description=(
+        "Reads up to MAX_CHARS characters from a file located under the working directory. "
+        "Rejects paths outside the permitted working directory and returns an error if the path "
+        "does not exist or is not a regular file. If the file is longer than MAX_CHARS, the content "
+        "is truncated and a truncation note is appended."
+    ),
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description=(
+                    'Path to the file to read, relative to the working directory (e.g., "notes.txt", '
+                    '"subdir/report.md").'
+                ),
+            ),
+        },
+        required=["file_path"],
+    ),
+)
 
 
 def get_file_content(working_directory, file_path):

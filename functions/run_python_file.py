@@ -1,5 +1,42 @@
 import os
 import subprocess
+from google.genai import types
+
+
+# Gemini tool schema for: run_python_file(working_directory, file_path, args=None)
+# Assumes: from google.genai import types
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description=(
+        "Executes a Python (.py) file located under the working directory using the system Python "
+        "interpreter, optionally passing command-line arguments. Validates that the path stays inside "
+        "the permitted working directory, the file exists, and has a .py extension. Captures STDOUT/STDERR "
+        "and returns a formatted result string. Enforces a 30-second timeout."
+    ),
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description=(
+                    'Path to the Python file to execute, relative to the working directory '
+                    '(e.g., "main.py", "scripts/run_task.py"). Must end with ".py".'
+                ),
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(type=types.Type.STRING),
+                description=(
+                    "Optional list of command-line arguments to pass to the Python program, "
+                    'e.g., ["--input", "data.txt", "42"]. If omitted, runs with no extra args.'
+                ),
+            ),
+        },
+        required=["file_path"],
+    ),
+)
+
 
 def run_python_file(working_directory, file_path, args=None):
     try:
