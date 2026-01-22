@@ -5,20 +5,44 @@ calculator project using Gemini function calling.
 
 ### How it works
 
-- `main.py`
-  - Parses CLI args and starts the agent loop.
-  - Maintains a `messages` list: the conversation history with the model.
-  - Repeatedly calls `generate_content()` until the model produces a final answer
-    (i.e., no more `function_calls`) or we hit `MAX_ITERS`.
+### main.py
 
-- `generate_content()`
-  - Sends `messages` to Gemini.
-  - Appends the model's candidates to `messages`.
-  - If the model requests tools:
-    - Calls local Python functions via `call_function`.
-    - Collects tool results and appends them to `messages` as a `"user"` message.
-  - If there are no tool calls:
-    - Returns the final natural-language answer.
+This file wires everything together and runs the agent.
+
+- `setup()`
+  - Loads environment variables with `dotenv`.
+  - Reads `GEMINI_API_KEY` and raises an error if it’s missing.
+
+- `parsing_input()`
+  - Uses `argparse` to parse the CLI:
+    - `user_prompt`: the initial question / task for the agent.
+    - `--verbose`: if set, prints extra debug info and tool output.
+
+- `llm_process(args)`
+  - Creates the Gemini client.
+  - Initializes the conversation `messages` with the user’s prompt.
+  - **Agent loop** (`for _ in range(20)`):
+    - Calls `client.models.generate_content(...)` with:
+      - the current `messages`
+      - the tools (`available_functions`)
+      - the system prompt.
+    - Appends the model’s `candidates` to `messages` so the model “remembers” what it said.
+    - If there are **no** `function_calls`:
+      - Prints `response.text` as the final answer and returns.
+    - If there **are** `function_calls`:
+      - For each tool call:
+        - Uses `call_function` to run the corresponding Python function.
+        - Extracts the `function_response` part.
+        - Collects these into `function_result`.
+      - Appends a new `types.Content(role="user", parts=function_result)` to `messages`
+        so the next model call can see the tool results.
+
+- `main()`
+  - Calls `setup()` to load the API key.
+  - Calls `parsing_input()` to get CLI arguments.
+  - Calls `llm_process(args)` to run the agent.
+
+### Tool function
 
 - `call_function.py`
   - Maps Gemini function names (e.g. `"get_files_info"`) to Python functions.
