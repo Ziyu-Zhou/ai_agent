@@ -34,11 +34,11 @@ def get_file_content(working_directory, file_path):
     
     working_dir_abs_path = os.path.abspath(working_directory)
 
-    print(f"checking abs_path to working directory: {working_dir_abs_path}")
+    # print(f"checking abs_path to working directory: {working_dir_abs_path}")
 
     target_file = os.path.normpath(os.path.join(working_dir_abs_path, file_path))
 
-    print(f"checking target_file : {target_file}")
+    # print(f"checking target_file : {target_file}")
 
     valid_target_file = os.path.commonpath([target_file, working_dir_abs_path]) == working_dir_abs_path
 

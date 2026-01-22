@@ -19,34 +19,10 @@ class Calculator:
         if not expression or expression.isspace():
             return None
         tokens = expression.strip().split()
-        return self._evaluate_infix(tokens)
+        return self._evaluate_expression(tokens)
 
-    def _evaluate_infix(self, tokens):
-        values = []
-        operators = []
-
-        for token in tokens:
-            if token in self.operators:
-                while (
-                    operators
-                    and operators[-1] in self.operators
-                    and self.precedence[operators[-1]] >= self.precedence[token]
-                ):
-                    self._apply_operator(operators, values)
-                operators.append(token)
-            else:
-                try:
-                    values.append(float(token))
-                except ValueError:
-                    raise ValueError(f"invalid token: {token}")
-
-        while operators:
-            self._apply_operator(operators, values)
-
-        if len(values) != 1:
-            raise ValueError("invalid expression")
-
-        return values[0]
+    def _has_precedence(self, op1, op2):
+        return self.precedence[op1] >= self.precedence[op2]
 
     def _apply_operator(self, operators, values):
         if not operators:
@@ -59,3 +35,30 @@ class Calculator:
         b = values.pop()
         a = values.pop()
         values.append(self.operators[operator](a, b))
+
+    def _evaluate_expression(self, tokens):
+        if not tokens:
+            raise ValueError("empty expression")
+
+        values = []
+        operators = []
+
+        for token in tokens:
+            if token in self.operators:
+                while (operators and operators[-1] in self.precedence and
+                       self._has_precedence(operators[-1], token)):
+                    self._apply_operator(operators, values)
+                operators.append(token)
+            else:
+                try:
+                    values.append(float(token))
+                except ValueError:
+                    raise ValueError(f"invalid token: {token}")
+        
+        while operators:
+            self._apply_operator(operators, values)
+
+        if len(values) != 1:
+            raise ValueError("invalid expression")
+
+        return values[0]

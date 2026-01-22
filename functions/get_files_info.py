@@ -39,15 +39,17 @@ def get_files_info(working_directory, directory="."):
     # file size, and whether it's a directory itself. Use this data to build and return a
     # string representing the contents of the target directory. It should be in the following format:
 
+    contents = ""
+
     for element in os.listdir(target_dir):
         full_path = os.path.join(target_dir, element)
         is_dir = os.path.isdir(full_path)
         file_size = os.path.getsize(full_path)
 
-        print(f"{element}: file_size={file_size}, is_dir={is_dir}")
+        #print(f"{element}: file_size={file_size}, is_dir={is_dir}")
+        contents += f"{element}: file_size={file_size}, is_dir={is_dir}\n"
 
-
-    return "end of get_files_info"
+    return contents
     
     
 
