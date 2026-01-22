@@ -32,53 +32,63 @@ def llm_process(args):
 
     messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
 
+
     # calling the LLM model
-    response = client.models.generate_content(
-        model='gemini-2.5-flash', 
-        contents=messages,
-        config = types.GenerateContentConfig(
-            tools = [available_functions],
-            system_instruction=system_prompt,
-            temperature=0
-            ),
-    )
+    # agent loop update
+    for _ in range(20):
+        response = client.models.generate_content(
+            model='gemini-2.5-flash', 
+            contents=messages,
+            config = types.GenerateContentConfig(
+                tools = [available_functions],
+                system_instruction=system_prompt,
+                temperature=0
+                ),
+        )
+        # checks the candiates of the respnse 
+        candidates = response.candidates
+        if candidates:
+            for candidate in candidates:
+                messages.append(candidate.content)
 
-    #checking response meta data
+        #checking response meta data
 
-    if response.usage_metadata != None:
-        if args.verbose:
-            print(f"User prompt: {args.user_prompt}")
-            print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-            print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-    else:
-        raise RuntimeError("no usage_metadata")
-    
-
-    # program output 
-    if response.function_calls != None:
-        function_result = []
-        for function_call in response.function_calls:
-            function_call_result = call_function(function_call, args.verbose)
-            if not function_call_result.parts:
-                raise Exception("No parts in function_call_result")
-            first_part = function_call_result.parts[0]
-
-            if not first_part.function_response:
-                raise Exception("No function_response in function_call_result")
-
-            if not first_part.function_response.response:
-                raise Exception("No function_response.response in function_call_result")
-
+        if response.usage_metadata != None:
             if args.verbose:
-                print(f"-> {function_call_result.parts[0].function_response.response}")
+                print(f"User prompt: {args.user_prompt}")
+                print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+                print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        else:
+            raise RuntimeError("no usage_metadata")
+        
 
-            
-        # for function_call in response.function_calls:
-        #     print(f"Calling function: {function_call.name}({function_call.args})")
-    else:
-        print(response.text)
+        # program output 
+        if response.function_calls:
+            function_result = []
+            for function_call in response.function_calls:
+                function_call_result = call_function(function_call, args.verbose)
+                if not function_call_result.parts:
+                    raise Exception("No parts in function_call_result")
+                first_part = function_call_result.parts[0]
+                function_result.append(first_part)
+                if not first_part.function_response:
+                    raise Exception("No function_response in function_call_result")
 
+                if not first_part.function_response.response:
+                    raise Exception("No function_response.response in function_call_result")
 
+                if args.verbose:
+                    print(f"-> {function_call_result.parts[0].function_response.response}")
+            messages.append(types.Content(role="user", parts=function_result))
+
+                
+            # for function_call in response.function_calls:
+            #     print(f"Calling function: {function_call.name}({function_call.args})")
+        else:
+            print(response.text)
+            return 0
+    
+    
 
 def main():
 
@@ -86,7 +96,17 @@ def main():
 
     args = parsing_input()
 
-    llm_process(args)
+    # agent loop update
+    # for _ in range(20):
+    #     return_result = llm_process(args)
+    #     if return_result == 0:
+    #         return 0
+    
+    # print(f"end of program loop reached, terminating...")
+    # exit(1)
+
+    return_result = llm_process(args)
+
 
     # print("Hello from ai-agent!")
 

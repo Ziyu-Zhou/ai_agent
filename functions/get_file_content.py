@@ -54,14 +54,14 @@ def get_file_content(working_directory, file_path):
             
             # After reading the first MAX_CHARS...
             if f.read(1):
-                print("more than max char")
+                # print("more than max char")
                 content += f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
-                print(content) 
+                # print(content) 
                 return 0
             
-            print(content)
+            # print(content)
 
-            return "everything printed!"
+            return content
             
 
             
